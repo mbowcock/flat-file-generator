@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using FlatFile;
 
-namespace FlatFile
+namespace FlatFileTest
 {
     // Define file record with attributes
     class FileRecord
