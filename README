@@ -1,0 +1,5 @@
+C# Flat file generator
+
+Uses a custom attribute to describe how a class representing a data row should be written.
+
+This code is new - still needs testing.
