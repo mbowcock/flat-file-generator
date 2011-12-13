@@ -1,5 +1,8 @@
-C# Flat file generator
+C# Flat file generator (fixed width file generator)
 
-Uses a custom attribute to describe how a class representing a data row should be written.
+1. Create a class to describe a file record
+2. Apply FlatFileAttribute to class properties
+3. Call FlatFile.writeFile(...)
 
-This code is new - still needs testing.
+FlatFile.writeFile(List<T> records, string path) takes a list of objects (your record class) and creates a file using the
+FlatFileAttributes in the format you specified. File is written to the path you pass.
