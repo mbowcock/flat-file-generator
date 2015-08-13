@@ -5,71 +5,84 @@ using System.Text;
 using System.Reflection;
 using System.IO;
 
-namespace FlatFile
-{
-    class FlatFile<T>
-    {
-        public void writeFile(List<T> records, string filePath)
-        {
-            // Make sure there are records to write
-            if (records.Count > 0)
-            {
-                Type t = records[0].GetType();
-                PropertyInfo[] pi = t.GetProperties();
+namespace FlatFile {
+	/// <summary>
+	/// Outputs a flat file of type T.
+	/// </summary>
+	/// <typeparam name="T">The type of the file to write, with properties that implement <see cref="FlatFileAttribute"/>.</typeparam>
+	public sealed class FlatFile<T> {
+		public void WriteFile( List<T> records, string filePath ) {
+			// Make sure there are records to write
+			if( records.Count == 0 )
+				return;
+			var t = records[ 0 ].GetType( );
+			var pi = t.GetProperties( );
 
-                using (StreamWriter writer = File.CreateText(filePath))
-                {
-                    foreach (T record in records)
-                    {
-                        string dataRow = string.Empty;
+			using( var writer = File.CreateText( filePath ) ) {
+				foreach( var line in records.Select( record => createLine( record, pi ) ) ) {
+					// write to file
+					writer.WriteLine( line );
+				}
+			}
+		}
 
-                        foreach (PropertyInfo p in pi)
-                        {
-                            object[] attributes = p.GetCustomAttributes(typeof(FlatFileAttribute), false);
-                            FlatFileAttribute ffa = null;
-                            int start = 0, length = 0;
+		public void WriteFile( List<T> records, Stream stream ) {
+			// Make sure there are records to write
+			if( records.Count == 0 )
+				return;
+			var t = records[ 0 ].GetType( );
+			var pi = t.GetProperties( );
 
-                            if (attributes.Length > 0)
-                            {
-                                ffa = (FlatFileAttribute)attributes[0];
-                            }
+			foreach( var lineBytes in records.Select( record => createLine( record, pi ) ).Select( stringToBytes ) ) {
+				// write to file
+				stream.Write( lineBytes, 0, lineBytes.Length );
+			}
+		}
 
-                            if (ffa != null)
-                            {
-                                start = ffa.startPosition;
-                                length = ffa.fieldLength;
-                            }
+		private static byte[ ] stringToBytes( string text ) {
+			var bytes = new ASCIIEncoding( ).GetBytes( text + Environment.NewLine );
+			return bytes;
+		}
 
-                            string outputString = p.GetValue(record, null).ToString();
-                            if (outputString.Length < length)
-                            {
-                                outputString = outputString.PadRight(length);
-                            }
+		private static string createLine( T record, IEnumerable<PropertyInfo> pi ) {
+			var dataRow = String.Empty;
 
-                            if (outputString.Length == length)
-                            {
-                                if (dataRow.Length < start)
-                                {
-                                    dataRow += outputString;
-                                }
-                                else
-                                {
-                                    // current field falls inside the middle of the existing output string.
-                                    // split based on start position and then concatenate
-                                    string leftSide = string.Empty, rightSide = string.Empty;
-                                    leftSide = dataRow.Substring(0, start - 1);
-                                    rightSide = dataRow.Substring(start, dataRow.Length);
-                                    dataRow = leftSide + outputString + rightSide;
-                                }
-                            }
-                        }
+			foreach( var p in pi ) {
+				var attributes = p.GetCustomAttributes( typeof( FlatFileAttribute ), false );
+				FlatFileAttribute ffa = null;
+				int start = 0, length = 0;
 
-                        // write to file
-                        writer.WriteLine(dataRow);
-                    }
-                }
-            }
-        }
-    }
+				if( attributes.Length > 0 ) {
+					ffa = (FlatFileAttribute) attributes[ 0 ];
+				}
 
+				if( ffa != null ) {
+					start = ffa.StartPosition;
+					length = ffa.FieldLength;
+				}
+
+				var outputString = p.GetValue( record, null ).ToString( );
+				if( outputString.Length < length ) {
+					outputString = outputString.PadRight( length );
+				} else if( outputString.Length > length ) {
+					outputString = outputString.Substring( 0, length );
+				}
+
+				if( dataRow.Length + 1 == start ) {
+					dataRow += outputString;
+				} else if( dataRow.Length < start ) {
+					// need to extend the line out
+					dataRow = dataRow.PadRight( start - 1 ) + outputString;
+				} else {
+					// current field falls inside the middle of the existing output string.
+					// split based on start position and then concatenate
+					var leftSide = dataRow.Substring( 0, start - 1 );
+					var rightSide = dataRow.Substring( start, dataRow.Length );
+					dataRow = leftSide + outputString + rightSide;
+				}
+			}
+
+			return dataRow;
+		}
+	}
 }
