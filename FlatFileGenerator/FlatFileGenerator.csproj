@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="FlatFile.cs" />
     <Compile Include="FlatFileAttribute.cs" />
+    <Compile Include="FlatFileBase.cs" />
+    <Compile Include="IFlatFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

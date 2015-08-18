@@ -10,7 +10,7 @@ namespace FlatFile {
 	/// Outputs a flat file of type T.
 	/// </summary>
 	/// <typeparam name="T">The type of the file to write, with properties that implement <see cref="FlatFileAttribute"/>.</typeparam>
-	public sealed class FlatFile<T> {
+	public sealed class FlatFile<T> where T : IFlatFile {
 		public void WriteFile( List<T> records, string filePath ) {
 			// Make sure there are records to write
 			if( records.Count == 0 )
@@ -80,6 +80,14 @@ namespace FlatFile {
 					var rightSide = dataRow.Substring( start, dataRow.Length );
 					dataRow = leftSide + outputString + rightSide;
 				}
+			}
+
+			if( record.FixedLineWidth > 0 ) {
+				// row has a fixed width, trim or extend to specified length
+				if( dataRow.Length > record.FixedLineWidth )
+					dataRow = dataRow.Substring( 0, record.FixedLineWidth );
+				else if( dataRow.Length < record.FixedLineWidth )
+					dataRow = dataRow.PadRight( record.FixedLineWidth );
 			}
 
 			return dataRow;
