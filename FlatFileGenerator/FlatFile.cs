@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Reflection;
 using System.IO;
 
 namespace FlatFile {
@@ -15,11 +14,9 @@ namespace FlatFile {
 			// Make sure there are records to write
 			if( records.Count == 0 )
 				return;
-			var t = records[ 0 ].GetType( );
-			var pi = t.GetProperties( );
 
 			using( var writer = File.CreateText( filePath ) ) {
-				foreach( var line in records.Select( record => createLine( record, pi ) ) ) {
+				foreach( var line in records.Select( createLine ) ) {
 					// write to file
 					writer.WriteLine( line );
 				}
@@ -30,10 +27,8 @@ namespace FlatFile {
 			// Make sure there are records to write
 			if( records.Count == 0 )
 				return;
-			var t = records[ 0 ].GetType( );
-			var pi = t.GetProperties( );
 
-			foreach( var lineBytes in records.Select( record => createLine( record, pi ) ).Select( stringToBytes ) ) {
+			foreach( var lineBytes in records.Select( createLine ).Select( stringToBytes ) ) {
 				// write to file
 				stream.Write( lineBytes, 0, lineBytes.Length );
 			}
@@ -44,8 +39,9 @@ namespace FlatFile {
 			return bytes;
 		}
 
-		private static string createLine( T record, IEnumerable<PropertyInfo> pi ) {
+		private static string createLine( T record ) {
 			var dataRow = String.Empty;
+			var pi = record.GetType( ).GetProperties( );
 
 			foreach( var p in pi ) {
 				var attributes = p.GetCustomAttributes( typeof( FlatFileAttribute ), false );
@@ -53,7 +49,7 @@ namespace FlatFile {
 				int start = 0, length = 0;
 
 				if( attributes.Length > 0 ) {
-					ffa = (FlatFileAttribute) attributes[ 0 ];
+					ffa = attributes[ 0 ] as FlatFileAttribute;
 				}
 
 				if( ffa != null ) {
