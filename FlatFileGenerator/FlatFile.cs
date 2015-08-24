@@ -52,12 +52,14 @@ namespace FlatFile {
 					ffa = attributes[ 0 ] as FlatFileAttribute;
 				}
 
-				if( ffa != null ) {
-					start = ffa.StartPosition;
-					length = ffa.FieldLength;
-				}
+				if( ffa == null )
+					// skip properties without the FlatFileAttribute (e.g., IFlatFile.FixedLineWidth)
+					continue;
 
-				var outputString = p.GetValue( record, null ).ToString( );
+				start = ffa.StartPosition;
+				length = ffa.FieldLength;
+
+				var outputString = Convert.ToString( p.GetValue( record, null ) );
 				if( outputString.Length < length ) {
 					outputString = outputString.PadRight( length );
 				} else if( outputString.Length > length ) {
