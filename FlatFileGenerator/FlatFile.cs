@@ -46,7 +46,6 @@ namespace FlatFile {
 			foreach( var p in pi ) {
 				var attributes = p.GetCustomAttributes( typeof( FlatFileAttribute ), false );
 				FlatFileAttribute ffa = null;
-				int start = 0, length = 0;
 
 				if( attributes.Length > 0 ) {
 					ffa = attributes[ 0 ] as FlatFileAttribute;
@@ -56,8 +55,8 @@ namespace FlatFile {
 					// skip properties without the FlatFileAttribute (e.g., IFlatFile.FixedLineWidth)
 					continue;
 
-				start = ffa.StartPosition;
-				length = ffa.FieldLength;
+				var start = ffa.StartPosition;
+				var length = ffa.FieldLength;
 
 				var outputString = Convert.ToString( p.GetValue( record, null ) );
 				if( outputString.Length < length ) {
